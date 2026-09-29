@@ -85,10 +85,10 @@ cd backend
 cp .env.example .env
 ```
 
-No `.env`, troque `localhost` por `host.docker.internal` no `DATABASE_URL` (de dentro do container, `localhost` é o próprio container) e defina `API_PORT=8000`:
+No `.env`, troque `localhost` por `host.docker.internal` no `DATABASE_HOST` (de dentro do container, `localhost` é o próprio container) e defina `API_PORT=8000`:
 
 ```dotenv
-DATABASE_URL=postgresql+psycopg://sbg_user:sbg_password@host.docker.internal:5432/sbg
+DATABASE_HOST=host.docker.internal
 API_PORT=8000
 ```
 
@@ -125,7 +125,11 @@ docker compose down -v     # para o banco e apaga os dados
 
 | Variável | Descrição | Exemplo |
 | --- | --- | --- |
-| `DATABASE_URL` | URL de conexão do Postgres | `postgresql+psycopg://sbg_user:sbg_password@localhost:5432/sbg` |
+| `DATABASE_HOST` | Host do Postgres (endpoint do RDS em produção) | `localhost` |
+| `DATABASE_PORT` | Porta do Postgres | `5432` |
+| `DATABASE_USER` | Usuário do Postgres | `sbg_user` |
+| `DATABASE_PASSWORD` | Senha do Postgres | `sbg_password` |
+| `DATABASE_NAME` | Nome do banco | `sbg` |
 | `CORS_ORIGINS` | Origens liberadas no CORS, separadas por vírgula | `http://app.jvictor.cloud,http://localhost:5173` |
 | `CHECKIN_RATE_LIMIT` | Rate limit por IP no `POST /checkins` | `30/minute` |
 | `API_PORT` | Porta do host exposta pelo `backend/docker-compose.yml` | `80` (EC2) ou `8000` (dev) |

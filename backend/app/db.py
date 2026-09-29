@@ -1,11 +1,15 @@
 import os
 
-from sqlalchemy import create_engine
+from sqlalchemy import URL, create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql+psycopg://sbg_user:sbg_password@localhost:5432/sbg",
+DATABASE_URL = URL.create(
+    "postgresql+psycopg",
+    username=os.getenv("DATABASE_USER", "sbg_user"),
+    password=os.getenv("DATABASE_PASSWORD", "sbg_password"),
+    host=os.getenv("DATABASE_HOST", "localhost"),
+    port=int(os.getenv("DATABASE_PORT", "5432")),
+    database=os.getenv("DATABASE_NAME", "sbg"),
 )
 
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
