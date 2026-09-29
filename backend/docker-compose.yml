@@ -1,0 +1,16 @@
+services:
+  api:
+    build: .
+    image: workshop-api
+    container_name: workshop-api
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "${API_PORT:-80}:8000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
