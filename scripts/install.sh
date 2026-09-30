@@ -1,22 +1,32 @@
 #!/usr/bin/env bash
-set -euxo pipefail
 
+dnf update -y
 dnf install -y docker git
-systemctl enable --now docker
+
+systemctl start docker
+systemctl enable docker
 
 usermod -aG docker ec2-user
 
-ARCH=$(uname -m)
-mkdir -p /usr/local/lib/docker/cli-plugins
-curl -fsSL "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-${ARCH}" \
-  -o /usr/local/lib/docker/cli-plugins/docker-compose
-chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+PLUGIN_DIR=/usr/local/lib/docker/cli-plugins
+mkdir -p "$PLUGIN_DIR"
 
-case "$ARCH" in x86_64) BX_ARCH=amd64 ;; aarch64) BX_ARCH=arm64 ;; esac
-BX_VERSION=$(curl -fsSLI -o /dev/null -w '%{url_effective}' https://github.com/docker/buildx/releases/latest | sed 's#.*/tag/##')
-curl -fsSL "https://github.com/docker/buildx/releases/download/${BX_VERSION}/buildx-${BX_VERSION}.linux-${BX_ARCH}" \
-  -o /usr/local/lib/docker/cli-plugins/docker-buildx
-chmod +x /usr/local/lib/docker/cli-plugins/docker-buildx
+COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep tag_name | cut -d '"' -f 4)
+curl -SL "https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-linux-$(uname -m)" -o "$PLUGIN_DIR/docker-compose"
 
+chmod +x "$PLUGIN_DIR/docker-compose"
+
+case "$(uname -m)" in
+  x86_64) BUILDX_ARCH=amd64 ;;
+  aarch64) BUILDX_ARCH=arm64 ;;
+esac
+
+BUILDX_VERSION=$(curl -s https://api.github.com/repos/docker/buildx/releases/latest | grep tag_name | cut -d '"' -f 4)
+curl -SL "https://github.com/docker/buildx/releases/download/${BUILDX_VERSION}/buildx-${BUILDX_VERSION}.linux-${BUILDX_ARCH}" -o "$PLUGIN_DIR/docker-buildx"
+
+chmod +x "$PLUGIN_DIR/docker-buildx"
+
+git --version
+docker --version
 docker compose version
 docker buildx version
