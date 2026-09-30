@@ -2,11 +2,11 @@
 
 Esse workshop consiste em apresentar conceitos básicos de **Cloud Computing** e fazer um overview sobre os principais conceitos sobre a **AWS**.
 
-Ela consiste na implementação da arquitetura do slide "Arquitetura na prática":
+Ele consiste na implementação da arquitetura do slide "Arquitetura na prática":
 
 ![img](docs/aws_labs.gif)
 
-A página um campo de texto para colocar o seu nome e tem um botão **"Fazer check-in na nuvem"**. Cada clique grava uma linha na tabela `checkins` do Postgres, e o contador mostra o total de check-ins.
+A página tem um campo de texto para colocar o seu nome e um botão **"Fazer check-in na nuvem"**. Cada check-in grava uma linha na tabela `checkins` do Postgres, e o contador mostra o total. Cada nome só pode fazer check-in uma vez.
 
 ## Estrutura
 
@@ -27,7 +27,8 @@ A página um campo de texto para colocar o seu nome e tem um botão **"Fazer che
 ├── scripts/
 │   └── install.sh       # user data da EC2: Docker, Compose, Buildx e git
 ├── docs/                # imagens do README
-└── docker-compose.yml   # Postgres local (dev)
+├── docker-compose.yml   # Postgres local (dev)
+└── LICENSE
 ```
 
 ## Requisitos
@@ -48,7 +49,7 @@ Na raiz do projeto:
 docker compose up -d
 ```
 
-Isso sobe o Postgres 17 em `localhost:5432` com usuário, senha e banco. Para conferir se está saudável:
+Isso sobe o Postgres 17 em `localhost:5432` com usuário `sbg_user`, senha `sbg_password` e banco `sbg`. Para conferir se está saudável:
 
 ```bash
 docker compose ps
@@ -69,7 +70,9 @@ A tabela `checkins` é criada automaticamente quando a API sobe. Teste:
 
 ```bash
 curl http://localhost:8000/health
-curl -X POST http://localhost:8000/checkins
+curl -X POST http://localhost:8000/checkins \
+  -H 'Content-Type: application/json' \
+  -d '{"name": "Maria"}'
 curl http://localhost:8000/checkins/count
 ```
 
@@ -109,7 +112,7 @@ cp .env.example .env
 npm run dev
 ```
 
-Abra <http://localhost:5173> e clique no botão.
+Abra <http://localhost:5173>, digite seu nome e clique no botão.
 
 ### 4. Parar tudo
 
@@ -215,7 +218,7 @@ Clone o projeto e configure as variáveis:
 
 ```bash
 git clone https://github.com/JvictorMarques/aws-sbg-workshop.git
-cd workshop/backend
+cd aws-sbg-workshop/backend
 cp .env.example .env
 vi .env
 ```
@@ -344,7 +347,15 @@ Abra <http://app.jvictor.cloud> e faça o seu check-in.
 | --- | --- | --- |
 | `GET` | `/health` | Health check |
 | `GET` | `/checkins/count` | Total de check-ins |
-| `POST` | `/checkins` | Cria um check-in e retorna `{ id, created_at, total }` |
+| `POST` | `/checkins` | Recebe `{ "name": "..." }`, cria um check-in e retorna `{ id, name, created_at, total }` |
+
+Respostas de erro do `POST /checkins`:
+
+| Status | Quando |
+| --- | --- |
+| `409 Conflict` | O nome já fez check-in |
+| `422 Unprocessable Entity` | Nome vazio ou com mais de 100 caracteres |
+| `429 Too Many Requests` | Rate limit excedido |
 
 ### Rate limit
 
@@ -353,3 +364,7 @@ O `POST /checkins` é limitado por IP com [slowapi](https://github.com/laurentS/
 - O limite é definido em `CHECKIN_RATE_LIMIT` (padrão `30/minute`). Outros formatos: `5/second`, `100/hour`.
 
 > **Dica:** terminou o workshop? Apague a EC2, o RDS e o bucket para não ter surpresas na fatura.
+
+## Licença
+
+Distribuído sob a licença MIT. Veja [LICENSE](LICENSE).
